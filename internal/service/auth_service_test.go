@@ -1,3 +1,9 @@
+// - Регистрация нового пользователя 
+// - Обработка дубликатов при регистрации 
+// - Вход по email и паролю 
+// - Обработка неверных учётных данных 
+// - Генерация и валидация JWT токенов
+
 package service
 
 import (
@@ -9,9 +15,8 @@ import (
 	"github.com/gibbon/finace-dashboard/internal/repository"
 )
 
-// mockUserRepository - мок репозитория для тестов
 type mockUserRepository struct {
-	users map[string]*model.User
+	users      map[string]*model.User
 	emailIndex map[string]*model.User
 }
 
@@ -19,7 +24,7 @@ var errUserNotFound = repository.ErrUserNotFound
 
 func newMockUserRepository() *mockUserRepository {
 	return &mockUserRepository{
-		users: make(map[string]*model.User),
+		users:      make(map[string]*model.User),
 		emailIndex: make(map[string]*model.User),
 	}
 }
@@ -69,9 +74,9 @@ func (m *mockUserRepository) Delete(ctx context.Context, id string) error {
 func TestAuthService_Register(t *testing.T) {
 	repo := newMockUserRepository()
 	authService := NewAuthService(repo, AuthServiceConfig{
-		JWTSecret:       "test-secret",
-		AccessExpiry:    15 * time.Minute,
-		RefreshExpiry:   24 * time.Hour,
+		JWTSecret:     "test-secret",
+		AccessExpiry:  15 * time.Minute,
+		RefreshExpiry: 24 * time.Hour,
 	})
 
 	user, err := authService.Register(context.Background(), "test@example.com", "password123")
@@ -91,18 +96,16 @@ func TestAuthService_Register(t *testing.T) {
 func TestAuthService_Register_Duplicate(t *testing.T) {
 	repo := newMockUserRepository()
 	authService := NewAuthService(repo, AuthServiceConfig{
-		JWTSecret:       "test-secret",
-		AccessExpiry:    15 * time.Minute,
-		RefreshExpiry:   24 * time.Hour,
+		JWTSecret:     "test-secret",
+		AccessExpiry:  15 * time.Minute,
+		RefreshExpiry: 24 * time.Hour,
 	})
 
-	// Первая регистрация
 	_, err := authService.Register(context.Background(), "test@example.com", "password123")
 	if err != nil {
 		t.Fatalf("Failed to register first user: %v", err)
 	}
 
-	// Вторая регистрация с тем же email
 	_, err = authService.Register(context.Background(), "test@example.com", "password456")
 	if err != ErrUserAlreadyExists {
 		t.Errorf("Expected ErrUserAlreadyExists, got %v", err)
@@ -112,18 +115,16 @@ func TestAuthService_Register_Duplicate(t *testing.T) {
 func TestAuthService_Login(t *testing.T) {
 	repo := newMockUserRepository()
 	authService := NewAuthService(repo, AuthServiceConfig{
-		JWTSecret:       "test-secret",
-		AccessExpiry:    15 * time.Minute,
-		RefreshExpiry:   24 * time.Hour,
+		JWTSecret:     "test-secret",
+		AccessExpiry:  15 * time.Minute,
+		RefreshExpiry: 24 * time.Hour,
 	})
 
-	// Регистрируем пользователя
 	_, err := authService.Register(context.Background(), "test@example.com", "password123")
 	if err != nil {
 		t.Fatalf("Failed to register user: %v", err)
 	}
 
-	// Пытаемся войти
 	user, err := authService.Login(context.Background(), "test@example.com", "password123")
 	if err != nil {
 		t.Fatalf("Failed to login: %v", err)
@@ -137,9 +138,9 @@ func TestAuthService_Login(t *testing.T) {
 func TestAuthService_Login_InvalidCredentials(t *testing.T) {
 	repo := newMockUserRepository()
 	authService := NewAuthService(repo, AuthServiceConfig{
-		JWTSecret:       "test-secret",
-		AccessExpiry:    15 * time.Minute,
-		RefreshExpiry:   24 * time.Hour,
+		JWTSecret:     "test-secret",
+		AccessExpiry:  15 * time.Minute,
+		RefreshExpiry: 24 * time.Hour,
 	})
 
 	_, err := authService.Login(context.Background(), "nonexistent@example.com", "password123")
@@ -151,9 +152,9 @@ func TestAuthService_Login_InvalidCredentials(t *testing.T) {
 func TestAuthService_GenerateTokens(t *testing.T) {
 	repo := newMockUserRepository()
 	authService := NewAuthService(repo, AuthServiceConfig{
-		JWTSecret:       "test-secret",
-		AccessExpiry:    15 * time.Minute,
-		RefreshExpiry:   24 * time.Hour,
+		JWTSecret:     "test-secret",
+		AccessExpiry:  15 * time.Minute,
+		RefreshExpiry: 24 * time.Hour,
 	})
 
 	user := &model.User{
@@ -174,7 +175,6 @@ func TestAuthService_GenerateTokens(t *testing.T) {
 		t.Error("RefreshToken should not be empty")
 	}
 
-	// Проверяем валидацию токенов
 	claims, err := authService.ValidateAccessToken(accessToken)
 	if err != nil {
 		t.Errorf("Failed to validate access token: %v", err)

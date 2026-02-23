@@ -11,15 +11,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ErrUserNotFound возвращается когда пользователь не найден
 var ErrUserNotFound = errors.New("user not found")
 
-// postgresUserRepository реализует repository.UserRepository используя PostgreSQL
 type postgresUserRepository struct {
 	pool *pgxpool.Pool
 }
 
-// NewPostgresUserRepository создаёт новый экземпляр репозитория
 func NewPostgresUserRepository(pool *pgxpool.Pool) repository.UserRepository {
 	return &postgresUserRepository{pool: pool}
 }

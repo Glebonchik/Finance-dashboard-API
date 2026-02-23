@@ -5,17 +5,16 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gibbon/finace-dashboard/internal/dto"
 	domainService "github.com/gibbon/finace-dashboard/internal/domain/service"
+	"github.com/gibbon/finace-dashboard/internal/dto"
 	"github.com/gibbon/finace-dashboard/internal/service"
 )
 
-// AuthHandler обрабатывает HTTP запросы для аутентификации
+// Обрабатка HTTP запросов аутентификации
 type AuthHandler struct {
 	authService domainService.AuthService
 }
 
-// NewAuthHandler создаёт новый AuthHandler
 func NewAuthHandler(authService domainService.AuthService) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
@@ -40,7 +39,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Валидация входных данных
 	if req.Email == "" || req.Password == "" {
 		http.Error(w, `{"error": "email and password are required"}`, http.StatusBadRequest)
 		return
@@ -154,9 +152,7 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем данные пользователя
-	// Для этого нам понадобится метод в сервисе
-	// Пока заглушка - в реальной реализации нужно получить пользователя из БД
+	// Пока заглушка. TODO: добавить получение пользователя из базы данных
 	_ = userID
 
 	// TODO: Получить пользователя и сгенерировать новые токены

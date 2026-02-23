@@ -7,12 +7,11 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-// Config содержит всю конфигурацию приложения
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Redis    RedisConfig
-	JWT      JWTConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	Redis     RedisConfig
+	JWT       JWTConfig
 	MLService MLServiceConfig
 }
 
@@ -30,7 +29,6 @@ type DatabaseConfig struct {
 	SSLMode  string `envconfig:"DB_SSLMODE" default:"disable"`
 }
 
-// DSN возвращает строку подключения к БД
 func (c *DatabaseConfig) DSN() string {
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -44,15 +42,14 @@ type RedisConfig struct {
 	Password string `envconfig:"REDIS_PASSWORD"`
 }
 
-// Address возвращает адрес Redis для подключения
 func (c *RedisConfig) Address() string {
 	return fmt.Sprintf("%s:%s", c.Host, c.Port)
 }
 
 type JWTConfig struct {
-	Secret         string        `envconfig:"JWT_SECRET" required:"true"`
-	AccessExpiry   time.Duration `envconfig:"JWT_ACCESS_EXPIRATION" default:"15m"`
-	RefreshExpiry  time.Duration `envconfig:"JWT_REFRESH_EXPIRATION" default:"24h"`
+	Secret        string        `envconfig:"JWT_SECRET" required:"true"`
+	AccessExpiry  time.Duration `envconfig:"JWT_ACCESS_EXPIRATION" default:"15m"`
+	RefreshExpiry time.Duration `envconfig:"JWT_REFRESH_EXPIRATION" default:"24h"`
 }
 
 type MLServiceConfig struct {
@@ -60,7 +57,6 @@ type MLServiceConfig struct {
 	Port string `envconfig:"ML_SERVICE_PORT" default:"50051"`
 }
 
-// Load загружает конфигурацию из переменных окружения
 func Load() (*Config, error) {
 	var cfg Config
 	if err := envconfig.Process("", &cfg); err != nil {

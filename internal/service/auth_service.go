@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gibbon/finace-dashboard/internal/domain/model"
-	domainService "github.com/gibbon/finace-dashboard/internal/domain/service"
 	"github.com/gibbon/finace-dashboard/internal/domain/repository"
+	domainService "github.com/gibbon/finace-dashboard/internal/domain/service"
 	repo "github.com/gibbon/finace-dashboard/internal/repository"
 	"github.com/gibbon/finace-dashboard/pkg/jwt"
 	"github.com/google/uuid"
@@ -19,23 +19,20 @@ var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
-// Ошибки репозитория
 var ErrUserNotFound = repo.ErrUserNotFound
 
-// AuthServiceConfig содержит конфигурацию для сервиса
+// Конфигурация для сервиса
 type AuthServiceConfig struct {
-	JWTSecret        string
-	AccessExpiry     time.Duration
-	RefreshExpiry    time.Duration
+	JWTSecret     string
+	AccessExpiry  time.Duration
+	RefreshExpiry time.Duration
 }
 
-// authServiceImpl реализует AuthService
 type authServiceImpl struct {
-	userRepo  repository.UserRepository
+	userRepo   repository.UserRepository
 	jwtManager *jwt.Manager
 }
 
-// NewAuthService создаёт новый экземпляр сервиса аутентификации
 func NewAuthService(userRepo repository.UserRepository, cfg AuthServiceConfig) domainService.AuthService {
 	return &authServiceImpl{
 		userRepo:   userRepo,
@@ -44,7 +41,7 @@ func NewAuthService(userRepo repository.UserRepository, cfg AuthServiceConfig) d
 }
 
 func (s *authServiceImpl) Register(ctx context.Context, email, password string) (*model.User, error) {
-	// Проверяем, существует ли уже пользователь
+	// Проверяем, существует ли пользователь
 	existingUser, err := s.userRepo.GetByEmail(ctx, email)
 	if err == nil && existingUser != nil {
 		return nil, ErrUserAlreadyExists
@@ -61,7 +58,6 @@ func (s *authServiceImpl) Register(ctx context.Context, email, password string) 
 
 	passwordStr := string(hashedPassword)
 
-	// Создаём нового пользователя
 	user := &model.User{
 		ID:             uuid.New().String(),
 		Email:          email,
@@ -85,7 +81,6 @@ func (s *authServiceImpl) Login(ctx context.Context, email, password string) (*m
 		return nil, err
 	}
 
-	// Проверяем пароль
 	if user.PasswordHash == nil {
 		return nil, ErrInvalidCredentials
 	}
@@ -98,16 +93,16 @@ func (s *authServiceImpl) Login(ctx context.Context, email, password string) (*m
 }
 
 func (s *authServiceImpl) LoginWithGoogle(ctx context.Context, googleID, email string) (*model.User, error) {
-	// Пытаемся найти существующего пользователя по Google ID
+	// Поиск пользователя по Google ID
 	user, err := s.userRepo.GetByGoogleID(ctx, googleID)
 	if err == nil && user != nil {
 		return user, nil
 	}
 
-	// Если не найден, пытаемся найти по email
+	// Поиск по email (если не нашли по Google ID)
 	user, err = s.userRepo.GetByEmail(ctx, email)
 	if err == nil && user != nil {
-		// Привязываем Google ID к существующему аккаунту
+		// Приязка Google ID к существующему пользователю
 		user.GoogleID = &googleID
 		if err := s.userRepo.Update(ctx, user); err != nil {
 			return nil, err
@@ -115,7 +110,6 @@ func (s *authServiceImpl) LoginWithGoogle(ctx context.Context, googleID, email s
 		return user, nil
 	}
 
-	// Создаём нового пользователя
 	user = &model.User{
 		ID:             uuid.New().String(),
 		Email:          email,
@@ -130,7 +124,7 @@ func (s *authServiceImpl) LoginWithGoogle(ctx context.Context, googleID, email s
 	return user, nil
 }
 
-// GenerateTokens генерирует пару токенов для пользователя
+// Генерация пары аксесс и рефреш токенов
 func (s *authServiceImpl) GenerateTokens(user *model.User) (accessToken, refreshToken string, err error) {
 	accessToken, err = s.jwtManager.GenerateAccessToken(user.ID, user.Email)
 	if err != nil {
@@ -145,12 +139,10 @@ func (s *authServiceImpl) GenerateTokens(user *model.User) (accessToken, refresh
 	return accessToken, refreshToken, nil
 }
 
-// ValidateAccessToken валидирует access токен
 func (s *authServiceImpl) ValidateAccessToken(token string) (*jwt.Claims, error) {
 	return s.jwtManager.ValidateAccessToken(token)
 }
 
-// ValidateRefreshToken валидирует refresh токен
 func (s *authServiceImpl) ValidateRefreshToken(token string) (string, error) {
 	return s.jwtManager.ValidateRefreshToken(token)
 }

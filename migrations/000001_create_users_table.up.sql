@@ -11,7 +11,7 @@ CREATE TABLE users (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
-    -- Проверка: должен быть указан либо пароль, либо Google ID
+    -- Проерка пароля, либо Google ID
     CONSTRAINT check_auth_method CHECK (
         (password_hash IS NOT NULL AND google_id IS NULL) OR
         (password_hash IS NULL AND google_id IS NOT NULL) OR
@@ -19,11 +19,9 @@ CREATE TABLE users (
     )
 );
 
--- Индексы для ускорения поиска
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_google_id ON users(google_id);
 
--- Триггер для обновления updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN

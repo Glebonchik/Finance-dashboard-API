@@ -1,16 +1,3 @@
-// @title Personal Finance Dashboard API
-// @version 1.0
-// @description Backend API для персонального финансового дашборда
-// @description
-// @description ## Аутентификация
-// @description Для доступа к защищённым эндпоинтам используйте JWT токен в заголовке:
-// @description ```
-// @description Authorization: Bearer <your_token>
-// @description ```
-// @contact.name API Support
-// @host localhost:8080
-// @BasePath /api/v1
-// @schemes http https
 package main
 
 import (
@@ -40,7 +27,6 @@ import (
 )
 
 func main() {
-	// Загружаем .env файл
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
@@ -53,42 +39,37 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
-	// Загружаем конфигурацию
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Подключаемся к PostgreSQL
 	dbPool, err := pgxpool.New(context.Background(), cfg.Database.DSN())
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer dbPool.Close()
 
-	// Проверяем подключение
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	if err := dbPool.Ping(ctx); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 	log.Println("Connected to PostgreSQL")
 
-	// Инициализируем зависимости
 	userRepo := repository.NewPostgresUserRepository(dbPool)
-	
+
 	authService := service.NewAuthService(userRepo, service.AuthServiceConfig{
-		JWTSecret:       cfg.JWT.Secret,
-		AccessExpiry:    cfg.JWT.AccessExpiry,
-		RefreshExpiry:   cfg.JWT.RefreshExpiry,
+		JWTSecret:     cfg.JWT.Secret,
+		AccessExpiry:  cfg.JWT.AccessExpiry,
+		RefreshExpiry: cfg.JWT.RefreshExpiry,
 	})
 
 	jwtManager := jwt.NewManager(cfg.JWT.Secret, cfg.JWT.AccessExpiry, cfg.JWT.RefreshExpiry)
 	authHandler := handlers.NewAuthHandler(authService)
 	authMiddleware := appMiddleware.NewAuthMiddleware(jwtManager)
 
-	// Настраиваем роутер
 	r := chi.NewRouter()
 
 	// Middleware
@@ -138,7 +119,6 @@ func main() {
 		})
 	})
 
-	// Запускаем сервер
 	server := &http.Server{
 		Addr:         cfg.Server.Port,
 		Handler:      r,
@@ -152,12 +132,12 @@ func main() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
-		
+
 		log.Println("Shutting down server...")
-		
+
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		
+
 		if err := server.Shutdown(ctx); err != nil {
 			log.Fatalf("Server shutdown error: %v", err)
 		}
@@ -168,4 +148,3 @@ func main() {
 		log.Fatalf("Server failed: %v", err)
 	}
 }
-

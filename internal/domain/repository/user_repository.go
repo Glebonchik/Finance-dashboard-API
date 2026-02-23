@@ -6,23 +6,22 @@ import (
 	"github.com/gibbon/finace-dashboard/internal/domain/model"
 )
 
-// UserRepository определяет интерфейс для работы с пользователями
 type UserRepository interface {
-	// Create создаёт нового пользователя
+	// Создаёт нового пользователя
 	Create(ctx context.Context, user *model.User) error
-	
-	// GetByID находит пользователя по ID
+
+	// Находит пользователя по ID
 	GetByID(ctx context.Context, id string) (*model.User, error)
-	
-	// GetByEmail находит пользователя по email
+
+	// Находит пользователя по email
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
-	
-	// GetByGoogleID находит пользователя по Google ID
+
+	// Находит пользователя по Google ID
 	GetByGoogleID(ctx context.Context, googleID string) (*model.User, error)
-	
-	// Update обновляет данные пользователя
+
+	// Обновляет данные пользователя
 	Update(ctx context.Context, user *model.User) error
-	
-	// Delete удаляет пользователя по ID
+
+	// Удаляет пользователя по ID
 	Delete(ctx context.Context, id string) error
 }
