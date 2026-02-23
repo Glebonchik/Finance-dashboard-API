@@ -1,0 +1,14 @@
+.env
+*.log
+tmp/
+vendor/
+.idea/
+.vscode/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
