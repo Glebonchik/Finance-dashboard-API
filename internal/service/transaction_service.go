@@ -10,53 +10,50 @@ import (
 	"github.com/google/uuid"
 )
 
-// TransactionService определяет интерфейс для работы с транзакциями
 type TransactionService interface {
-	// Create создаёт новую транзакцию с автоматической категоризацией
+	// Создаёт новую транзакцию с автоматической категоризацией
 	Create(ctx context.Context, userID string, tx *model.Transaction) (*model.Transaction, error)
 
-	// GetByID возвращает транзакцию по ID
+	// Возвращает транзакцию по ID
 	GetByID(ctx context.Context, userID, id string) (*model.Transaction, error)
 
-	// GetByUserID возвращает транзакции пользователя с фильтрацией
+	// Возвращает транзакции пользователя с фильтрацией
 	GetByUserID(ctx context.Context, filter model.TransactionFilter) ([]*model.Transaction, error)
 
-	// Update обновляет транзакцию
+	// Обновляет транзакцию
 	Update(ctx context.Context, userID string, tx *model.Transaction) (*model.Transaction, error)
 
-	// Delete удаляет транзакцию
+	// Удаляет транзакцию
 	Delete(ctx context.Context, userID, id string) error
 
-	// Categorize выполняет категоризацию транзакции
+	// Выполняет категоризацию транзакции
 	Categorize(ctx context.Context, userID string, tx *model.Transaction) error
 
-	// CreateRule создаёт правило категоризации
+	// Создаёт правило категоризации
 	CreateRule(ctx context.Context, userID string, keyword string, categoryID int) (*model.UserCategoryRule, error)
 
-	// GetRules возвращает правила пользователя
+	// Возвращает правила пользователя
 	GetRules(ctx context.Context, userID string) ([]*model.UserCategoryRule, error)
 
-	// DeleteRule удаляет правило
+	// Удаляет правило
 	DeleteRule(ctx context.Context, userID, ruleID string) error
 
-	// GetCategories возвращает все категории
+	// Возвращает все категории
 	GetCategories(ctx context.Context) ([]*model.Category, error)
 }
 
-// categorizationResult результат категоризации
+// Результат категоризации
 type categorizationResult struct {
 	categoryID  *int
 	isConfirmed bool
 }
 
-// transactionServiceImpl реализация TransactionService
 type transactionServiceImpl struct {
 	txRepo       repository.TransactionRepository
 	categoryRepo repository.CategoryRepository
 	ruleRepo     repository.UserCategoryRuleRepository
 }
 
-// NewTransactionService создаёт новый TransactionService
 func NewTransactionService(
 	txRepo repository.TransactionRepository,
 	categoryRepo repository.CategoryRepository,
@@ -75,12 +72,10 @@ func (s *transactionServiceImpl) Create(ctx context.Context, userID string, tx *
 	tx.CreatedAt = time.Now()
 	tx.UpdatedAt = time.Now()
 
-	// Автоматическая категоризация
 	if err := s.Categorize(ctx, userID, tx); err != nil {
 		return nil, err
 	}
 
-	// Сохранение транзакции
 	if err := s.txRepo.Create(ctx, tx); err != nil {
 		return nil, err
 	}
@@ -115,12 +110,10 @@ func (s *transactionServiceImpl) Update(ctx context.Context, userID string, tx *
 		return nil, err
 	}
 
-	// Проверка что транзакция принадлежит пользователю
 	if existing.UserID != userID {
 		return nil, ErrUnauthorized
 	}
 
-	// Обновление
 	if err := s.txRepo.Update(ctx, tx); err != nil {
 		return nil, err
 	}
@@ -142,10 +135,6 @@ func (s *transactionServiceImpl) Delete(ctx context.Context, userID, id string) 
 }
 
 // Categorize выполняет автоматическую категоризацию транзакции
-// Алгоритм:
-// 1. Проверяем правила пользователя (keyword matching)
-// 2. Если правило найдено - используем его категорию
-// 3. Если нет - оставляем категорию пустой (требует ручного подтверждения)
 func (s *transactionServiceImpl) Categorize(ctx context.Context, userID string, tx *model.Transaction) error {
 	if tx.Description == "" {
 		return nil
@@ -169,7 +158,7 @@ func (s *transactionServiceImpl) Categorize(ctx context.Context, userID string, 
 	}
 
 	// Правило не найдено - оставляем без категории
-	// В будущем здесь будет вызов ML-сервиса
+	// TODO: сделать тут вызов ML - сервиса
 	tx.IsConfirmed = false
 
 	return nil
