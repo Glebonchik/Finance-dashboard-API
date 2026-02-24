@@ -1,20 +1,4 @@
-basePath: /api/v1
-host: localhost:8080
 info:
-  contact:
-    name: API Support
-  description: |-
-    Backend API для персонального финансового дашборда
-
-    ## Аутентификация
-    Для доступа к защищённым эндпоинтам используйте JWT токен в заголовке:
-    ```
-    Authorization: Bearer <your_token>
-    ```
-  title: Personal Finance Dashboard API
-  version: "1.0"
+  contact: {}
 paths: {}
-schemes:
-- http
-- https
 swagger: "2.0"

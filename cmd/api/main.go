@@ -59,6 +59,9 @@ func main() {
 	log.Println("Connected to PostgreSQL")
 
 	userRepo := repository.NewPostgresUserRepository(dbPool)
+	txRepo := repository.NewPostgresTransactionRepository(dbPool)
+	categoryRepo := repository.NewPostgresCategoryRepository(dbPool)
+	ruleRepo := repository.NewPostgresUserCategoryRuleRepository(dbPool)
 
 	authService := service.NewAuthService(userRepo, service.AuthServiceConfig{
 		JWTSecret:     cfg.JWT.Secret,
@@ -66,9 +69,14 @@ func main() {
 		RefreshExpiry: cfg.JWT.RefreshExpiry,
 	})
 
+	txService := service.NewTransactionService(txRepo, categoryRepo, ruleRepo)
+
 	jwtManager := jwt.NewManager(cfg.JWT.Secret, cfg.JWT.AccessExpiry, cfg.JWT.RefreshExpiry)
 	authHandler := handlers.NewAuthHandler(authService)
 	authMiddleware := appMiddleware.NewAuthMiddleware(jwtManager)
+	txHandler := handlers.NewTransactionHandler(txService)
+	categoryHandler := handlers.NewCategoryHandler(txService)
+	categoryRuleHandler := handlers.NewCategoryRuleHandler(txService)
 
 	r := chi.NewRouter()
 
@@ -105,16 +113,36 @@ func main() {
 			r.Post("/logout", authHandler.Logout)
 		})
 
+		// Категории
+		// TODO: сделать protected
+		r.Get("/categories", categoryHandler.GetAll)
+
 		// Protected routes
 		r.Group(func(r chi.Router) {
 			r.Use(authMiddleware.Middleware)
 
-			// TODO: Добавить routes для транзакций и аналитики
+			// User info
 			r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
 				userID, _ := appMiddleware.GetUserIDFromContext(r.Context())
 				email, _ := appMiddleware.GetEmailFromContext(r.Context())
 				w.Header().Set("Content-Type", "application/json")
 				fmt.Fprintf(w, `{"user_id": "%s", "email": "%s"}`, userID, email)
+			})
+
+			// Транзакции
+			r.Route("/transactions", func(r chi.Router) {
+				r.Post("/", txHandler.Create)
+				r.Get("/", txHandler.GetAll)
+				r.Get("/{id}", txHandler.GetByID)
+				r.Put("/{id}", txHandler.Update)
+				r.Delete("/{id}", txHandler.Delete)
+			})
+
+			// Правила категорий
+			r.Route("/category-rules", func(r chi.Router) {
+				r.Post("/", categoryRuleHandler.Create)
+				r.Get("/", categoryRuleHandler.GetAll)
+				r.Delete("/{id}", categoryRuleHandler.Delete)
 			})
 		})
 	})

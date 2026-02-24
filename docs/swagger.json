@@ -1,18 +1,7 @@
 {
-    "schemes": [
-        "http",
-        "https"
-    ],
     "swagger": "2.0",
     "info": {
-        "description": "Backend API для персонального финансового дашборда\n\n## Аутентификация\nДля доступа к защищённым эндпоинтам используйте JWT токен в заголовке:\n```\nAuthorization: Bearer \u003cyour_token\u003e\n```",
-        "title": "Personal Finance Dashboard API",
-        "contact": {
-            "name": "API Support"
-        },
-        "version": "1.0"
+        "contact": {}
     },
-    "host": "localhost:8080",
-    "basePath": "/api/v1",
     "paths": {}
 }
