@@ -17,6 +17,7 @@ import (
 var (
 	ErrUserAlreadyExists  = errors.New("user already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrUnauthorized       = errors.New("unauthorized")
 )
 
 var ErrUserNotFound = repo.ErrUserNotFound
