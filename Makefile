@@ -74,7 +74,7 @@ migrate-version:
 # Generate Swagger documentation
 swagger:
 	@echo "Generating Swagger documentation..."
-	swag init --dir cmd/api --generalInfo main.go --output docs
+	swag init --dir . --generalInfo cmd/api/main.go --output docs
 	@echo "Swagger documentation generated!"
 
 # Download dependencies

@@ -16,7 +16,7 @@ import (
 	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 
-	"github.com/gibbon/finace-dashboard/docs"
+	_ "github.com/gibbon/finace-dashboard/docs"
 	"github.com/gibbon/finace-dashboard/internal/config"
 	"github.com/gibbon/finace-dashboard/internal/handlers"
 	appMiddleware "github.com/gibbon/finace-dashboard/internal/middleware"
@@ -26,18 +26,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// @title Personal Finance Dashboard API
+// @version 1.0
+// @description Backend API для персонального финансового дашборда
+// @host localhost:8080
+// @BasePath /api/v1
+// @schemes http https
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
-
-	// Инициализируем Swagger
-	docs.SwaggerInfo.Title = "Personal Finance Dashboard API"
-	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Description = "Backend API для персонального финансового дашборда"
-	docs.SwaggerInfo.Host = "localhost:8080"
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	cfg, err := config.Load()
 	if err != nil {
